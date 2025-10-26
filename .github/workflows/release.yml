@@ -87,3 +87,34 @@ jobs:
         omitNameDuringUpdate: true
         omitBodyDuringUpdate: true
         omitPrereleaseDuringUpdate: true
+
+  vendor_tarball:
+    name: create vendor tarball
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@1.89.0
+
+    - name: Create vendor tarball
+      run: |
+        cargo vendor
+        XZ_OPT='-T0 -9' tar -acf typst-vendor.tar.xz vendor
+
+    - uses: actions/upload-artifact@v4
+      if: github.event_name == 'workflow_dispatch'
+      with:
+        name: typst-vendor.tar.xz
+        path: "typst-vendor.tar.xz"
+        retention-days: 3
+
+    - uses: ncipollo/release-action@v1.14.0
+      if: github.event_name == 'release'
+      with:
+        artifacts: "typst-vendor.tar.xz"
+        allowUpdates: true
+        omitNameDuringUpdate: true
+        omitBodyDuringUpdate: true
+        omitPrereleaseDuringUpdate: true
